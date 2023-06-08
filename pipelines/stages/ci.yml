@@ -1,0 +1,37 @@
+parameters:
+  - name: workingDir
+    type: string
+
+stages:
+- stage: TerraformContinuousIntegration
+  displayName: Terraform - CI
+  jobs:
+    - job: StaticCodeAnalysis
+      displayName: CI - Static Code Analysis 
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - task: Bash@3
+        displayName: 'Install checkov'
+        inputs:
+          targetType: 'inline'
+          script: 'pip3 install checkov'
+
+      - task: Bash@3
+        displayName: 'Checkov Static Code Analysis'
+        inputs:
+          targetType: 'inline'
+          script: |
+            checkov -d $(System.DefaultWorkingDirectory)/${{ parameters.workingDir }} --skip-path /pipelines --output junitxml > $(System.DefaultWorkingDirectory)/Checkov-Report.xml
+            cat $(System.DefaultWorkingDirectory)/Checkov-Report.xml   
+
+      - task: PublishTestResults@2
+        displayName: 'Publish code analysis report'
+        inputs:
+          testResultsFormat: 'JUnit'
+          testRunTitle: 'Static Code Analysis'
+          testResultsFiles: 'Checkov-Report.xml' 
+          searchFolder: '$(System.DefaultWorkingDirectory)'
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true

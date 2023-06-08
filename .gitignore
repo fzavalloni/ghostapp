@@ -1,0 +1,15 @@
+
+**/.terraform/*
+**/.vscode/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.lock.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+DeleteMe.txt
+kubeconfig
+.terraformrc
+terraform.rc

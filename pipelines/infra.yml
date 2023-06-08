@@ -1,0 +1,40 @@
+name: $(date:yyyy.M.d)-$(Build.SourceBranchName)-$(date:HHmm)
+
+trigger:
+  paths:
+    include:
+    - /terraform/dev/GhostApp/Infra/*
+
+variables:
+  - name: vmImage
+    value: windows-latest
+  - name: workingDir
+    value: /terraform/dev/GhostApp/Infra/
+  - name: environment
+    value: DEV
+  - group: DEV
+
+stages:
+
+- template: stages/ci.yml
+  parameters:
+    workingDir: ${{ variables.workingDir }}
+
+- template: stages/terraform-plan.yml
+  parameters:
+    vmImage: ${{ variables.vmImage }}
+    connectedServiceName: ${{ variables.environment }}
+    environment: ${{ variables.environment }}
+    workingDir: ${{ variables.workingDir }}
+    terraformVariables: ' -var ghost_app_password=$(GhostAppPassword) -var-file ..\\variables.auto.tfvars'
+
+#Deployments require pull request
+- ${{ if eq(variables['Build.Reason'], 'PullRequest')}}:
+  - template: stages/terraform-deploy.yml
+    parameters:
+      vmImage: ${{ variables.vmImage }}
+      connectedServiceName: ${{ variables.environment }}
+      environment: ${{ variables.environment }}
+      workingDir: ${{ variables.workingDir }}
+      terraformVariables: ' -var ghost_app_password=$(GhostAppPassword) -var-file ..\\variables.auto.tfvars'
+      requireApproval: true

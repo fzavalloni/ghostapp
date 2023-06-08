@@ -1,0 +1,69 @@
+parameters:
+  - name: vmImage
+    type: string
+  - name: connectedServiceName
+    type: string
+  - name: terraformVariables
+    type: string
+    default: '' #When empty does not include variables
+  - name: terraformTargets
+    type: string
+    default: '' #When empty it processes all tf files/targets in the folder
+  - name: workingDir
+    type: string
+  - name: environment
+    type: string
+  - name: requireApproval
+    type: boolean
+    default: true
+
+stages:
+- stage: Infra_Deploy
+  jobs:
+    - deployment:
+      continueOnError: false
+      timeoutInMinutes: 180
+      pool:
+        vmImage: ${{ parameters.vmImage }} # works either on windows and linux
+      ${{ if eq( parameters.requireApproval, true) }}: # Environment requires approval        
+          environment: ${{ parameters.environment }}
+      ${{ if eq( parameters.requireApproval, false )}}:
+        environment: Default # Environment doesn't require approval
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - checkout: self
+            - template: ../tasks/import-credentials.yml
+              parameters:
+                connectedServiceName: ${{ parameters.connectedServiceName }}
+
+            - task: AzureCLI@2
+              displayName: Terraform Apply
+              env:
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)            
+              retryCountOnTaskFailure: 2 
+              inputs:
+                connectedServiceNameARM: ${{ parameters.connectedServiceName }}
+                workingDirectory: '$(System.DefaultWorkingDirectory)${{ parameters.workingDir }}'
+                scriptType: bash
+                addSpnToEnvironment: true
+                scriptLocation: inlineScript
+                inlineScript: |                  
+                  export ARM_CLIENT_ID=$(AZURE_CLIENT_ID)
+                  export ARM_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
+                  export ARM_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+                  export ARM_TENANT_ID=$(AZURE_TENANT_ID)                  
+                  pwd
+                  ls -all
+                  terraform init                
+                  terraform apply ${{ parameters.terraformVariables }} ${{ parameters.terraformTargets}} -auto-approve
+
+
+              
+
+
+
+            
+
+            
