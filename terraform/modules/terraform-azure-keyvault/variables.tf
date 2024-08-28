@@ -1,75 +1,90 @@
-variable "name" {
-  type        = string
-  description = "The name of the Key Vault."
-}
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Variables
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Resource Group and Locations
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
+  description = "(Required) Name of the resource group to be used when creating this Azure KeyVault."
   type        = string
-  description = "The name of an existing resource group for the Key Vault."
+  nullable    = false
 }
-
-variable "sku" {
+variable "location" {
+  description = "(Required) Location to be used when creating this Azure KeyVault."
   type        = string
-  description = "The name of the SKU used for the Key Vault. The options are: `standard`, `premium`."
+  nullable    = false
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure KeyVault
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "name" {
+  description = "(Required) The name of this Azure KeyVault."
+  type        = string
+  nullable    = false
+}
+variable "sku" {
+  description = "(Optional) The SKU used for this Azure KeyVault. The options are: `standard`, `premium`. Defaults to `standard`."
+  type        = string
   default     = "standard"
 }
-
-variable "location" {
-  type        = string
-  description = "Azure region"
-  default     = ""
-}
-
 variable "enabled_for_deployment" {
+  description = "(Optional) Allow Virtual Machines to retrieve certificates stored as secrets from this Azure KeyVault. Defaults to `false`."
   type        = bool
-  description = "Allow Virtual Machines to retrieve certificates stored as secrets from the key vault."
   default     = false
 }
-
 variable "network_acls" {
-  description = "Object with attributes: `bypass`, `default_action`, `ip_rules`, `virtual_network_subnet_ids`. Set to `null` to disable. See https://www.terraform.io/docs/providers/azurerm/r/key_vault.html#bypass for more information."
+  description = "(Optional) Object with attributes: `bypass`, `default_action`, `ip_rules`, `virtual_network_subnet_ids`. Set to `null` to disable. See https://www.terraform.io/docs/providers/azurerm/r/key_vault.html#bypass for more information."
   type        = any
   default     = null
 }
-
 variable "enabled_for_disk_encryption" {
+  description = "(Optional) Allow Disk Encryption to retrieve secrets from the vault and unwrap keys. Defaults to `false`."
   type        = bool
-  description = "Allow Disk Encryption to retrieve secrets from the vault and unwrap keys."
   default     = false
 }
-
 variable "enabled_for_template_deployment" {
+  description = "(Optional) Allow Resource Manager to retrieve secrets from the Azure KeyVault. Defaults to `false`."
   type        = bool
-  description = "Allow Resource Manager to retrieve secrets from the key vault."
   default     = false
 }
-
 variable "access_policies" {
+  description = "(Optional) List of access policies for the Azure KeyVault. Defaults to `[]`."
   type        = any
-  description = "List of access policies for the Key Vault."
   default     = []
 }
-
 variable "secrets" {
+  description = "(Optional) A map of secrets for the Azure KeyVault. Defaults to `{}`."
   type        = map(string)
-  description = "A map of secrets for the Key Vault."
   default     = {}
 }
-
 variable "purge_protection_enabled" {
+  description = "(Optional) Enable purge protection. Defaults to `true`."
   type        = bool
-  description = "Enable purge protection."
-  default     = true 
+  default     = true
 }
-
 variable "enable_rbac_authorization" {
+  description = "(Optional) Enable RBAC authorization. Defaults to `false`."
   type        = bool
-  description = "Enable RBAC authorization."
-  default     = false 
+  default     = false
 }
-
+variable "public_network_access_enabled" {
+  description = "(Optional) Whether public network access is allowed for this Azure KeyVault. Defaults to `false`."
+  type        = bool
+  default     = false
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Tagging
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "tags" {
-  type        = map(any)
-  description = "A mapping of tags to assign to the resources."
-  default     = {}
+  description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
+  type        = map(string)
+  default     = null
 }

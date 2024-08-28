@@ -1,33 +1,74 @@
-data "azuread_group" "main" {
-  count = length(local.group_names)
-  display_name  = local.group_names[count.index]
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Main
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Sets Providers and Versions
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.69.0"
+    }
+  }
 }
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Module Logic
+  - Data block to fetch Azure Entra Groups.
+  - Data block to fetch Azure Entra Users.
+  - Data block to fetch Azure Resource Group.
+  - Data block to fetch Azure Client Configuration.
+  - Resource block to create Azure KeyVault.
+    - Dynamic block to create Network ACLs.
+    - Dynamic block to create Access Policy.
+  - Resource block to create Azure KeyVault Secret(s).
+/*
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Fetch Azure Entra Information
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+data "azuread_group" "main" {
+  count        = length(local.group_names)
+  display_name = local.group_names[count.index]
+}
 data "azuread_user" "main" {
   count               = length(local.user_principal_names)
   user_principal_name = local.user_principal_names[count.index]
 }
-
 data "azurerm_resource_group" "main" {
   name = var.resource_group_name
 }
+data "azurerm_client_config" "main" {
 
-data "azurerm_client_config" "main" {}
-
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Create Azure KeyVault.
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_key_vault" "main" {
   #checkov:skip=CKV_AZURE_109:We cannot implement due backward compatibility
   #checkov:skip=CKV2_AZURE_32:Not applicable within this resource
-  name                = var.name
-  location            = var.location == "" ? data.azurerm_resource_group.main.location : var.location
-  resource_group_name = data.azurerm_resource_group.main.name
-  tenant_id           = data.azurerm_client_config.main.tenant_id
-  sku_name            = var.sku
-
+  name                            = var.name
+  location                        = var.location == "" ? data.azurerm_resource_group.main.location : var.location
+  resource_group_name             = data.azurerm_resource_group.main.name
+  tenant_id                       = data.azurerm_client_config.main.tenant_id
+  sku_name                        = var.sku
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_disk_encryption     = var.enabled_for_disk_encryption
   enabled_for_template_deployment = var.enabled_for_template_deployment
   purge_protection_enabled        = var.purge_protection_enabled
   enable_rbac_authorization       = var.enable_rbac_authorization
+  public_network_access_enabled   = var.public_network_access_enabled
+  tags                            = var.tags
 
   dynamic "network_acls" {
     for_each = var.network_acls == null ? [] : [var.network_acls]
@@ -45,9 +86,8 @@ resource "azurerm_key_vault" "main" {
     for_each = local.combined_access_policies
 
     content {
-      tenant_id = data.azurerm_client_config.main.tenant_id
-      object_id = access_policy.value.object_id
-
+      tenant_id               = data.azurerm_client_config.main.tenant_id
+      object_id               = access_policy.value.object_id
       certificate_permissions = access_policy.value.certificate_permissions
       key_permissions         = access_policy.value.key_permissions
       secret_permissions      = access_policy.value.secret_permissions
@@ -59,17 +99,18 @@ resource "azurerm_key_vault" "main" {
     for_each = local.service_principal_object_id != "" ? [local.self_permissions] : []
 
     content {
-      tenant_id = data.azurerm_client_config.main.tenant_id
-      object_id = access_policy.value.object_id
-
+      tenant_id          = data.azurerm_client_config.main.tenant_id
+      object_id          = access_policy.value.object_id
       key_permissions    = access_policy.value.key_permissions
       secret_permissions = access_policy.value.secret_permissions
     }
   }
-
-  tags = var.tags
 }
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Create Azure KeyVault Secret(s)
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_key_vault_secret" "main" {
   #checkov:skip=CKV_AZURE_114:Content check is severity low
   #checkov:skip=CKV_AZURE_41:We don't use it at the moment in our environment
@@ -77,4 +118,5 @@ resource "azurerm_key_vault_secret" "main" {
   name         = each.key
   value        = each.value
   key_vault_id = azurerm_key_vault.main.id
+  tags         = var.tags
 }

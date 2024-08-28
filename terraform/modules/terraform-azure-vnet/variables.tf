@@ -1,57 +1,92 @@
-variable "virtualnet_name" {
-  description = "(Required) Name of the vnet to create"
-  type        = any  
-}
-
-variable "location" {
-  description = "(Required) Location in which resource is going to be created"
-  type        = any
-}
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Variables
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Resource Group and Locations
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
-  description = "(Required) Name of the resource group to be imported."
+  description = "(Required) Name of the resource group to be used when creating this Azure Virtual Network."
   type        = string
+  nullable    = false
 }
-
+variable "location" {
+  description = "(Required) Location to be used when creating this Azure Virtual Network."
+  type        = string
+  nullable    = false
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure Virtual Network
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "virtualnet_name" {
+  description = "(Required) Name of this Azure Virtual Network to create."
+  type        = any
+  nullable    = false
+}
 variable "address_space" {
-  description = "(Required) The address space that is used by the virtual network."
+  description = "(Required) The address space that is used by this Azure Virtual Network."
   type        = any
+  nullable    = false
 }
-
-# If no values specified, this defaults to Azure DNS 
 variable "dns_servers" {
-  description = "(Optional) The DNS servers to be used with vNet."
+  description = "(Optional) The DNS servers to be used with this Azure Virtual Network. Default is `[]`."
   type        = any
   default     = []
 }
-
-variable "tags" {
-  description = "(Optional) The tags to associate with your network and subnets."
-  type        = map(string)
-  default     = {}
-}
-
-# For example
-# SubNetId = NSGId
-# subnet_assoc        = { 
-#       5 = module.lata-brs-d-nsg-appsrv.network_security_group_id,
-#       6 = module.lata-brs-d-nsg-appsrv.network_security_group_id
-#   }
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure Network Security Group Associations
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "subnet_assoc" {
-  description = "(Optional) A map of subnet name to Network Security Group IDs"
+  description = <<-EOT
+  (Optional) A map of subnet IDs to Network Security Group IDs for association. Defaults to `{}`.
+
+  Inputs 
+  
+  ```hcl
+  subnet_assoc = { 
+    5 = module.lata-brs-d-nsg-appsrv.network_security_group_id,
+    6 = module.lata-brs-d-nsg-appsrv.network_security_group_id
+  }
+  ```
+  EOT
   type        = map(string)
   default     = {}
 }
-
 variable "subnet_names" {
+  description = "(Optional) List of subnets to create with this Azure Virtual Network"
   type = list(object({
-    name                                           = string
-    address_prefixes                               = any
-    enforce_private_link_endpoint_network_policies = bool
-    service_endpoints                              = any
-    delegation                                     = any
+    name                              = string
+    address_prefixes                  = any
+    private_endpoint_network_policies = string
+    service_endpoints                 = any
+    delegation                        = any
   }))
-  default     = []
-  description = "(Optional) List of subnets."
+  default = []
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure DDOS Protection Plan
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "ddos_protection_plan_id" {
+  description = "(Required) ID of the Azure DDOS protection plan."
+  type        = string
+  default     = null
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Tagging
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "tags" {
+  description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
+  type        = map(string)
+  default     = null
 }

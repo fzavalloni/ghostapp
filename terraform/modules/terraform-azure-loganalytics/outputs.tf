@@ -1,9 +1,18 @@
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Outputs
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 output "log_analytics_workspace_id" {
-  value = azurerm_log_analytics_workspace.main.id
+  description = "The ID of this Azure Log Analytics Workspace."
+  value       = try(azurerm_log_analytics_workspace.main.id, null)
 }
-
 output "log_analytics_workspace_primary_shared_key" {
-  description = "The Primary shared key for the Log Analytics Workspace."
-  value       = azurerm_log_analytics_workspace.main.primary_shared_key
+  description = "The primary shared key for this Azure Log Analytics Workspace."
+  value       = try(azurerm_log_analytics_workspace.main.primary_shared_key, null)
   sensitive   = true
+}
+output "log_analytics_query_pack_id" {
+  description = "The ID of the Log Analytics Query Pack."
+  value       = try(azurerm_log_analytics_query_pack.main[0].id, null)
 }

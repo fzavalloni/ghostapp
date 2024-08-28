@@ -1,52 +1,158 @@
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Main
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Sets Providers and Versions
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 terraform {
+  required_version = ">= 1.5"
   required_providers {
-    azurerm = ">= 3.37.0"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.69.0"
+    }
   }
 }
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Module Logic
+  - Resource block to create Azure Kubernetes Resource.
+    - Static block for Identity.
+    - Dynamic block for API Server Access Profile.
+    - Static block for Default Node Pool.
+    - Dynamic block for Storage Profile.
+    - Dynamic block for Autoscaler Profile.
+    - Dynamic block for Linux Profile.
+    - Dynamic block for Windows Profile.
+    - Static block for Network Profile.
+    - Dynamic block for Service Mesh Profile.
+    - Dynamic block for Active Directory RBAC Integration.
+    - Dynamic block for KeyVault Provider Integration.
+    - Dynamic block for Log Analytics Integration.
+    - Dynamic block for Application Gateway Ingress Integration.
+    - Dynamic block for Defender for Cloud Integration.
+  - Resource block for Additional Azure Kubernetes Node Pools.
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Create AKS Cluster
+  Use: Creates a singular AKS Cluster as per the variables declared to the module.
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_kubernetes_cluster" "main" {
-  #checkov:skip=CKV_AZURE_115:We cannot implement due backward compatibility
-  #checkov:skip=CKV_AZURE_117:Not applicable
-  #checkov:skip=CKV_AZURE_141:Not applicable because it is used in Azure Devops service principals
-  #checkov:skip=CKV_AZURE_171:Not applicable
-  #checkov:skip=CKV_AZURE_6:We have it, but it cannot be mandatory
-  #checkov:skip=CKV_AZURE_4:We have it, but it cannot be mandatory
-  name                              = var.cluster_name
-  location                          = var.location
-  resource_group_name               = var.resource_group_name
-  dns_prefix                        = var.dns_prefix
-  node_resource_group               = var.nodes_resource_group_name == null ? var.nodes_resource_group_name : var.nodes_resource_group_name
-  kubernetes_version                = var.kubernetes_version
-  sku_tier                          = var.sku_tier
-  private_cluster_enabled           = var.private_cluster_enabled
-  api_server_authorized_ip_ranges   = var.api_server_authorized_ip_ranges
-  tags                              = var.tags
-  local_account_disabled            = var.local_account_disabled
-  http_application_routing_enabled  = var.enable_http_application_routing
-  azure_policy_enabled              = var.enable_azure_policy
-
-  // identity block
-  // SystemAssigned is preferred so Azure takes care of the identity
+  #checkov:skip=CKV_AZURE_115: PrivateCluster: Not applicable: Unable to implement. Backwards Compatibility.
+  #checkov:skip=CKV_AZURE_117: DiskEnc:      : Not applicable. Unable to enforce.   DiskEnc is managed by Azure.
+  #checkov:skip=CKV_AZURE_141: LocalAdmin    : Not applicable. Unable to implement. Used in AzureDevOps.
+  #checkov:skip=CKV_AZURE_171: UpgradeChl    : Not applicable. Unable to implement. Business requires manual.
+  #checkov:skip=CKV_AZURE_6:   AuthorisedRge : Not applicable. Unable to implement. Backwards Compatibility.
+  #checkov:skip=CKV_AZURE_4:   Logging       : Not applicable. Unable to enforce.   Container Insights, and diagnostics.tf to Log Analytics.
+  #checkov:skip=CKV_AZURE_170: PaidSKU       : Not applicable. Unable to implement. Mix of Paid and Free SKU clusters.
+  name                             = var.cluster_name
+  location                         = var.location
+  resource_group_name              = var.resource_group_name
+  kubernetes_version               = var.kubernetes_version
+  sku_tier                         = var.sku_tier
+  dns_prefix                       = var.dns_prefix
+  dns_prefix_private_cluster       = var.private_cluster_dns_prefix
+  automatic_channel_upgrade        = var.automatic_channel_upgrade
+  azure_policy_enabled             = var.enable_azure_policy
+  cost_analysis_enabled            = var.cost_analysis_enabled
+  http_application_routing_enabled = var.enable_http_application_routing
+  image_cleaner_enabled            = var.image_cleaner_enabled
+  image_cleaner_interval_hours     = var.image_cleaner_interval_hours
+  local_account_disabled           = var.local_account_disabled
+  node_os_channel_upgrade          = var.node_os_channel_upgrade
+  node_resource_group              = var.nodes_resource_group_name == null ? var.nodes_resource_group_name : var.nodes_resource_group_name
+  oidc_issuer_enabled              = var.oidc_issuer_enabled
+  open_service_mesh_enabled        = var.service_mesh_envoy_enabled // Enables Open Service Mesh for Envoy https://learn.microsoft.com/en-us/azure/aks/open-service-mesh-about
+  private_cluster_enabled          = var.private_cluster_enabled
+  workload_identity_enabled        = var.workload_identity_enabled
+  run_command_enabled              = var.run_command_enabled
+  tags                             = var.tags
+  /*
+    Identity Block
+    Use: Sets the Cluster Identity, Preference is always Azure Managed Identity.
+  */
   identity {
     type = var.identity_type == null ? "SystemAssigned" : var.identity_type
   }
+  /*
+    API Server Access Profile
+    Use: Restricts access to the API Server for this Azure Kubenertes Cluster.
+  */
+  dynamic "api_server_access_profile" {
+    for_each = length(var.api_authorized_ip_ranges) > 0 ? [1] : []
 
-  // nodepool block
-  // The default nodepool is necessary for initial creation of the cluster
-  // TODO: remove the default nodepool after creation https://www.terraform.io/docs/language/resources/provisioners/local-exec.html
-  default_node_pool {
-    name                = "default"
-    node_count          = var.vm_count_default_nodepool
-    vm_size             = var.vm_size_default_nodepool
-    os_disk_size_gb     = 128
-    vnet_subnet_id      = var.subnet_id_default_nodepool
-    max_pods            = 250
-    enable_auto_scaling = var.autoscaling_default_nodepool
-    min_count           = var.autoscaling_min_count_default_nodepool
-    max_count           = var.autoscaling_max_count_default_nodepool
+    content {
+      authorized_ip_ranges     = var.api_authorized_ip_ranges
+      subnet_id                = var.api_subnet_id
+      vnet_integration_enabled = var.api_vnet_integration_enabled
+    }
   }
+  /*
+    Default Node Pool Block
+    Use: Creates the default NodePool which can be removed after initial creation. This is effectively the SystemPool. https://www.terraform.io/docs/language/resources/provisioners/local-exec.html
+  */
+  default_node_pool {
+    name                          = var.default_nodepool_name
+    node_count                    = var.default_nodepool_autoscaling ? null : var.default_nodepool_vm_count
+    vm_size                       = var.default_nodepool_vm_size
+    capacity_reservation_group_id = var.default_nodepool_vm_capacity_reservation_group_id
+    os_sku                        = var.default_nodepool_vm_os_sku
+    os_disk_type                  = var.default_nodepool_vm_os_disk_type
+    os_disk_size_gb               = var.default_nodepool_vm_os_disk_size
+    type                          = var.default_nodepool_type
+    orchestrator_version          = var.nodepool_orchestrator_version
+    vnet_subnet_id                = var.default_nodepool_subnet_id
+    zones                         = var.default_nodepool_zones
+    max_pods                      = var.default_nodepool_max_pods
+    enable_auto_scaling           = var.default_nodepool_autoscaling
+    min_count                     = var.default_nodepool_autoscaling_min_count
+    max_count                     = var.default_nodepool_autoscaling_max_count
+    scale_down_mode               = var.default_nodepool_scale_down_mode
+    only_critical_addons_enabled  = var.default_nodepool_only_critical_addons_enabled
+    node_labels                   = var.default_nodepool_node_labels
+    enable_host_encryption        = var.default_nodepool_enable_host_encryption
+    enable_node_public_ip         = var.default_nodepool_enable_node_public_ip
+    node_public_ip_prefix_id      = var.default_nodepool_public_ip_prefix
+    ultra_ssd_enabled             = var.default_nodepool_ultra_ssd_enabled
+    temporary_name_for_rotation   = var.default_nodepool_name_for_rotation
+    workload_runtime              = var.default_nodepool_workload_runtime
+    fips_enabled                  = var.default_nodepool_fips_enabled
+    tags                          = var.tags
+    /*
+      Microsoft Node Upgrade Settings
+      Use: Node surge defines how many worker nodes can be taken offline at the same time during upgrade.
+    */
+    upgrade_settings {
+      max_surge                     = var.node_max_surge
+      drain_timeout_in_minutes      = var.drain_timeout_in_minutes
+      node_soak_duration_in_minutes = var.node_soak_duration_in_minutes
+    }
+  }
+  /*
+    Storage Profile
+    Use: Enables and sets properties for storage profiles.
+  */
+  dynamic "storage_profile" {
+    for_each = var.storage_profile_enabled ? ["storage_profile"] : []
 
+    content {
+      blob_driver_enabled         = var.storage_profile_blob_driver_enabled
+      disk_driver_enabled         = var.storage_profile_disk_driver_enabled
+      disk_driver_version         = var.storage_profile_disk_driver_version
+      file_driver_enabled         = var.storage_profile_file_driver_enabled
+      snapshot_controller_enabled = var.storage_profile_snapshot_controller_enabled
+    }
+  }
+  /*
+    Autoscaler Block
+    Use: Sets the default for the Cluster Autoscaler.
+  */
   dynamic "auto_scaler_profile" {
     for_each = var.auto_scaler_profile != null ? [var.auto_scaler_profile] : []
     content {
@@ -69,7 +175,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       skip_nodes_with_system_pods      = try(auto_scaler_profile.value.skip_nodes_with_system_pods, null)
     }
   }
-
+  /*
+    Linux VMSS Profile
+    Use: Sets credentials for Linux VMSS Hosts.
+  */
   dynamic "linux_profile" {
     for_each = var.linux_profile != null ? [true] : []
     iterator = lp
@@ -81,6 +190,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       }
     }
   }
+  /*
+    Windows VMSS Profile
+    Use: Sets credentials for Linux VMSS Hosts.
+  */
   dynamic "windows_profile" {
     for_each = var.windows_profile != null ? [true] : []
     content {
@@ -88,18 +201,56 @@ resource "azurerm_kubernetes_cluster" "main" {
       admin_password = var.windows_profile.password
     }
   }
-
+  /*
+    Network Profile
+    Use: Sets the Cluster Networking properties.
+  */
   network_profile {
-    docker_bridge_cidr = var.net_profile_docker_bridge_cidr
-    dns_service_ip     = var.net_profile_dns_service_ip
-    service_cidr       = var.net_profile_service_cidr
-    load_balancer_sku  = var.net_profile_loadbalancer_sku
-    network_plugin     = var.network_plugin # by default set to azure
-    network_policy     = var.network_policy
-    outbound_type      = var.net_profile_outbound_type
-    pod_cidr           = var.net_profile_pod_cidr # only when using kubenet
-  }
+    network_mode        = var.net_mode
+    network_plugin      = var.net_plugin
+    network_plugin_mode = var.net_plugin_mode
+    network_policy      = var.net_policy
+    network_data_plane  = var.net_data_plane
+    dns_service_ip      = var.net_profile_dns_service_ip
+    service_cidr        = var.net_profile_service_cidr
+    pod_cidr            = var.net_profile_pod_cidr
+    ebpf_data_plane     = var.net_dataplane
+    ip_versions         = var.net_ip_versions
+    outbound_type       = var.net_profile_outbound_type
+    load_balancer_sku   = var.net_profile_loadbalancer_sku
 
+    dynamic "load_balancer_profile" {
+      for_each = var.load_balancer_profile_enabled ? [1] : []
+      content {
+        managed_outbound_ip_count   = var.net_azlb_managed_outbound_ipv4_count
+        managed_outbound_ipv6_count = var.net_azlb_managed_outbound_ipv6_count
+        idle_timeout_in_minutes     = var.net_azlb_idle_timeout_in_minutes
+        outbound_ports_allocated    = var.net_azlb_ports_allocated_per_instance
+      }
+    }
+    dynamic "nat_gateway_profile" {
+      for_each = var.nat_gateway_profile_enabled ? [1] : []
+      content {
+        managed_outbound_ip_count = var.net_aznatgw_outbound_ip_count
+        idle_timeout_in_minutes   = var.net_aznatgw_idle_timeout_in_minutes
+      }
+    }
+  }
+  /*
+    Open Service Mesh for Istio Block
+    Use: Enables the Open Service Mesh for Istio Cluster Extenions.
+  */
+  dynamic "service_mesh_profile" {
+    for_each = var.service_mesh_istio_profile_enabled ? ["service_mesh_profile"] : []
+
+    content {
+      mode = var.service_mesh_istio_profile.mode
+    }
+  }
+  /*
+    RBAC Access to Cluster
+    Use: Sets the Azure Entra groups with roles against this Azure Kubernetes Cluster.
+  */
   dynamic "azure_active_directory_role_based_access_control" {
     for_each = var.rbac_enabled && var.rbac_aad_managed ? ["rbac"] : []
     content {
@@ -107,7 +258,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       admin_group_object_ids = var.rbac_aad_admin_group_object_ids
     }
   }
-  
+  /*
+    Keyvault Profile
+    Use: Enables and sets properties for integration.
+  */
   dynamic "key_vault_secrets_provider" {
     for_each = var.key_vault_secrets_provider_enabled ? ["key_vault_secrets_provider"] : []
 
@@ -116,7 +270,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       secret_rotation_interval = var.secret_rotation_interval
     }
   }
-  
+  /*
+    Log Analytics Profile
+    Use: Enables and sets properties for integration.
+  */
   dynamic "oms_agent" {
     for_each = var.enable_log_analytics_workspace ? ["oms_agent"] : []
 
@@ -124,7 +281,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       log_analytics_workspace_id = var.log_analytics_workspace_id
     }
   }
-
+  /*
+    Application Gateway Ingress Profile
+    Use: Enables and sets properties for integration.
+  */
   dynamic "ingress_application_gateway" {
     for_each = var.ingress_application_gateway_enabled ? ["ingress_application_gateway"] : []
 
@@ -135,7 +295,10 @@ resource "azurerm_kubernetes_cluster" "main" {
       subnet_id    = var.ingress_application_gateway_subnet_id
     }
   }
-
+  /*
+    Microsoft Defender Profile
+    Use: Enables and sets properties for integration.
+  */
   dynamic "microsoft_defender" {
     for_each = var.microsoft_defender_enabled ? ["microsoft_defender"] : []
 
@@ -143,15 +306,92 @@ resource "azurerm_kubernetes_cluster" "main" {
       log_analytics_workspace_id = var.log_analytics_workspace_id
     }
   }
+  /*
+    AKS Cluster Maintenance Window Profile
+    Use: Maintenance configuration of the managed cluster.
+  */
+  dynamic "maintenance_window" {
+    for_each = var.maintenance_window != null ? ["maintenance_window"] : []
+    content {
+      dynamic "allowed" {
+        for_each = var.maintenance_window.allowed
+        content {
+          day   = allowed.value.day
+          hours = allowed.value.hours
+        }
+      }
+      dynamic "not_allowed" {
+        for_each = var.maintenance_window.not_allowed
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  /*
+    AKS Cluster Maintenance Window Profile for auto upgrade
+    Use: Maintenance configuration during auto upgrade enabled.
+  */
+  dynamic "maintenance_window_auto_upgrade" {
+    for_each = var.maintenance_window_auto_upgrade != null ? ["maintenance_window_auto_upgrade"] : []
+    content {
+      frequency    = maintenance_window_auto_upgrade.value.frequency
+      interval     = maintenance_window_auto_upgrade.value.interval
+      duration     = maintenance_window_auto_upgrade.value.duration
+      day_of_week  = maintenance_window_auto_upgrade.value.day_of_week
+      day_of_month = maintenance_window_auto_upgrade.value.day_of_month
+      week_index   = maintenance_window_auto_upgrade.value.week_index
+      start_time   = maintenance_window_auto_upgrade.value.start_time
+      utc_offset   = maintenance_window_auto_upgrade.value.utc_offset
+      start_date   = maintenance_window_auto_upgrade.value.start_date
+      dynamic "not_allowed" {
+        for_each = maintenance_window_auto_upgrade.value.not_allowed == null ? [] : maintenance_window_auto_upgrade.value.not_allowed
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
+  /*
+    AKS Cluster Maintenance Window Profile of Node OS
+    Use: Maintenance configuration of the cluster nodepool os.
+  */
+  dynamic "maintenance_window_node_os" {
+    for_each = var.maintenance_window_node_os == null ? [] : [var.maintenance_window_node_os]
+    content {
+      frequency    = maintenance_window_node_os.value.frequency
+      interval     = maintenance_window_node_os.value.interval
+      duration     = maintenance_window_node_os.value.duration
+      day_of_week  = maintenance_window_node_os.value.day_of_week
+      day_of_month = maintenance_window_node_os.value.day_of_month
+      week_index   = maintenance_window_node_os.value.week_index
+      start_time   = maintenance_window_node_os.value.start_time
+      utc_offset   = maintenance_window_node_os.value.utc_offset
+      start_date   = maintenance_window_node_os.value.start_date
+      dynamic "not_allowed" {
+        for_each = maintenance_window_node_os.value.not_allowed == null ? [] : maintenance_window_node_os.value.not_allowed
+        content {
+          end   = not_allowed.value.end
+          start = not_allowed.value.start
+        }
+      }
+    }
+  }
 }
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Create Additional Node Pools
+  Use: Allows for additional NodePools to be defined and created against this Azure Kubernetes Cluster.
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_kubernetes_cluster_node_pool" "pools" {
   lifecycle {
     ignore_changes = [
       node_count
     ]
   }
-
   for_each              = var.aks_additional_node_pools
   kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
   name                  = each.value.name
@@ -161,10 +401,17 @@ resource "azurerm_kubernetes_cluster_node_pool" "pools" {
   zones                 = each.value.zones
   max_pods              = 250
   os_disk_size_gb       = 128
+  orchestrator_version  = var.nodepool_orchestrator_version
   node_taints           = each.value.taints
   node_labels           = each.value.labels
   enable_auto_scaling   = each.value.cluster_auto_scaling
   min_count             = each.value.cluster_auto_scaling_min_count
   max_count             = each.value.cluster_auto_scaling_max_count
   vnet_subnet_id        = each.value.cluster_subnet_id
+  tags                  = var.tags
+  upgrade_settings {
+    max_surge                     = var.node_max_surge
+    drain_timeout_in_minutes      = var.drain_timeout_in_minutes
+    node_soak_duration_in_minutes = var.node_soak_duration_in_minutes
+  }
 }

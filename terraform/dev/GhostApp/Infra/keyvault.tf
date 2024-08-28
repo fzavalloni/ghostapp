@@ -5,7 +5,7 @@ data "azuread_group" "mgmt-group" {
 
 module "kv001" {
   source              = "../../../modules/terraform-azure-keyvault"
-  
+
   name                = "${var.environment-prefix}KV01"
   resource_group_name = module.resource-group-01.name
   location            = var.location

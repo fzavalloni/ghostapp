@@ -1,38 +1,74 @@
-variable "location" {
-  description = "(Required). The location of the cluster. Optional value are `az account list-locations -o table`"
-  type        = string
-}
-
-variable "tags" {
-  type        = map(any)
-  description = "(Optional). Any tags that should be defined on resources"
-  default     = {}
-}
-
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Variables
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Resource Group and Locations
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
-  description = "(Required).The resource group name of the cluster"
+  description = "(Required) Name of the resource group to be used when creating this Azure Log Analytics Workspace."
   type        = string
+  nullable    = false
 }
-
+variable "location" {
+  description = "(Required) Location to be used when creating this Azure Log Analytics Workspace."
+  type        = string
+  nullable    = false
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure Log Analytics Workspace
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 variable "log_analytics_workspace_name" {
-  description = "(Required) Workspace Name"
-  type        = string  
-} 
-
+  description = "(Required) The name for this Azure Log Analytics Workspace."
+  type        = string
+  nullable    = false
+}
 variable "log_analytics_workspace_sku" {
-  description = "(Optional). The SKU (pricing level) of the Log Analytics workspace.  Possible values are Free, PerNode, Premium, Standard, Standalone, Unlimited, CapacityReservation, and PerGB2018"
+  description = "(Optional). The SKU (pricing level) of this Azure Log Analytics Workspace.  Possible values are `Free`, `PerNode`, `Premium`, `Standard`, `Standalone`, `Unlimited`, `CapacityReservation`, and `PerGB2018`. Defaults to `PerGB2018`."
   type        = string
   default     = "PerGB2018"
 }
-
 variable "log_retention_in_days" {
-  description = "(Optional). The retention period for the logs in days"
+  description = "(Optional). The retention period for the logs in days. Defaults to `30`."
   type        = number
   default     = 30
 }
-
 variable "log_daily_quota_gb" {
-  description = "(Optional). The workspace daily quota for ingestion in GB. Defaults to -1 (unlimited) if omitted"
+  description = "(Optional). The daily quota for ingestion in GB. If omitted this value is unlimited. Defaults to `-1`."
   type        = number
   default     = -1
+}
+variable "log_reservation_capacity_in_gb_per_day" {
+  description = "(Optional) The capacity reservation level in GB for this workspace. Possible values are 100, 200, 300, 400, 500, 1000, 2000 and 5000. Defaults to `Null`"
+  type        = number
+  default     = null
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Azure Log Analytics Query Pack
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "create_log_analytics_query_pack" {
+  description = "Enable or disable the creation of Log Analytics Query Pack."
+  type        = bool
+  default     = false
+}
+variable "query_pack_name" {
+  description = "(Required) The name which should be used for this Log Analytics Query Pack. Changing this forces a new resource to be created."
+  type        = string
+}
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Tagging
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
+variable "tags" {
+  description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
+  type        = map(string)
+  default     = null
 }

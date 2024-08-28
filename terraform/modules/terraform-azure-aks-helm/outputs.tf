@@ -1,39 +1,40 @@
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Outputs
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 output "chart" {
-  description = "The name of the chart."
+  description = "The name of this Helm chart."
   value = {
-    for release in helm_release.this:
+    for release in helm_release.this :
     release.name => release.chart
   }
 }
-
 output "namespace" {
-  description = "Namespace is the kubernetes namespace of the release."
+  description = "The namespace of this release on Kubernetes."
   value = {
-    for release in helm_release.this:
+    for release in helm_release.this :
     release.name => release.namespace
   }
 }
-
 output "status" {
-  description = "Status of the release."
+  description = "Status of this release on Kubernetes."
   value = {
-    for release in helm_release.this:
+    for release in helm_release.this :
     release.name => release.status
   }
 }
-
 output "version" {
-  description = "A SemVer 2 conformant version string of the chart."
+  description = "A SemVer 2 conformant version string of this Helm chart."
   value = {
-    for release in helm_release.this:
+    for release in helm_release.this :
     release.name => release.version
   }
 }
-
 output "values" {
-  description = " The compounded values from values and set* attributes."
+  description = " The compounded values from values and set attributes for this Helm chart."
   value = {
-    for release in helm_release.this:
+    for release in helm_release.this :
     release.name => release.values
   }
 }

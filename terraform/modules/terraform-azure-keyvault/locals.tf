@@ -1,3 +1,8 @@
+#------------------------------------------------------------------------------------------------------------------------------------------
+/*
+  Locals
+*/
+#------------------------------------------------------------------------------------------------------------------------------------------
 locals {
   access_policies = [
     for p in var.access_policies : merge({
@@ -13,9 +18,8 @@ locals {
 
   group_names          = distinct(flatten(local.access_policies[*].group_names))
   user_principal_names = distinct(flatten(local.access_policies[*].user_principal_names))
-
-  group_object_ids = { for g in data.azuread_group.main : lower(g.name) => g.id }
-  user_object_ids  = { for u in data.azuread_user.main : lower(u.user_principal_name) => u.id }
+  group_object_ids     = { for g in data.azuread_group.main : lower(g.name) => g.id }
+  user_object_ids      = { for u in data.azuread_user.main : lower(u.user_principal_name) => u.id }
 
   flattened_access_policies = concat(
     flatten([
