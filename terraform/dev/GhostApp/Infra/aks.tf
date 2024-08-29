@@ -26,10 +26,8 @@ module "akscluster01" {
   ingress_application_gateway_name      = "${var.environment-prefix}AppGateway"
   ingress_application_gateway_subnet_id = module.vnet01.vnet_subnets[5]
   default_nodepool_vm_size              = "Standard_B2s"
-  net_plugin_mode                       = "overlay"
   net_policy                            = "cilium"
   net_data_plane                        = "cilium"
-
 
   aks_additional_node_pools = {
     hppool01 = {
