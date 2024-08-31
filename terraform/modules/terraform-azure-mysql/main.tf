@@ -1,12 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Main
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Sets Providers and Versions
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 terraform {
   required_version = ">= 1.5"
   required_providers {
@@ -16,21 +7,6 @@ terraform {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Module Logic
-  - Resource block to create a Azure MySQL Flexible Server.
-  - Resource block to create a Azure MySQL Flexible Server Configuration.
-  - Resource block to create a Azure MySQL Flexible Server Database.
-  - Resource block to create a Azure MySQL Flexible Server Network Rule(s).
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure MySQL Flexible Server
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_mysql_flexible_server" "this" {
   #checkov:skip=CKV_AZURE_94:Ensure My SQL server enables geo-redundant backups. Not applicable
   name                   = var.name
@@ -51,11 +27,6 @@ resource "azurerm_mysql_flexible_server" "this" {
     size_gb           = var.storage_size_gb
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure MySQL Flexible Server Configuration
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_mysql_flexible_server_configuration" "this" {
   for_each            = merge(local.default_mysql_options, var.mysql_options)
   name                = each.key
@@ -67,11 +38,6 @@ resource "azurerm_mysql_flexible_server_configuration" "this" {
     azurerm_mysql_flexible_server.this
   ]
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure MySQL Flexible Server Database
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_mysql_flexible_database" "this" {
   for_each            = var.databases
   name                = each.key
@@ -84,11 +50,6 @@ resource "azurerm_mysql_flexible_database" "this" {
     azurerm_mysql_flexible_server.this
   ]
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure MySQL Flexible Server Network Rule (s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_mysql_flexible_server_firewall_rule" "this" {
   for_each            = var.allowed_cidrs
   name                = each.key

@@ -1,12 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Main
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Sets Providers and Versions
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 terraform {
   required_version = ">= 1.5"
   required_providers {
@@ -16,21 +7,6 @@ terraform {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Module Logic
-  - Resource block to create Azure Log Analytics Workspace.
-  - Resource block to create Azure Log Analytics Solution.
-    - Sub block to create a Container Insights Plan.
-  - Resource block to create a Azure Log Analytics Query Pack.
-/*
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure Log Analytics Workspace
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_log_analytics_workspace" "main" {
   name                               = var.log_analytics_workspace_name
   location                           = var.location
@@ -41,11 +17,6 @@ resource "azurerm_log_analytics_workspace" "main" {
   reservation_capacity_in_gb_per_day = var.log_reservation_capacity_in_gb_per_day
   tags                               = var.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure Log Analytics Solution
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_log_analytics_solution" "main" {
   solution_name         = "ContainerInsights"
   location              = var.location
@@ -59,11 +30,6 @@ resource "azurerm_log_analytics_solution" "main" {
     product   = "OMSGallery/ContainerInsights"
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure Log Analytics Query Pack
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_log_analytics_query_pack" "main" {
   count               = var.create_log_analytics_query_pack ? 1 : 0
   name                = var.query_pack_name

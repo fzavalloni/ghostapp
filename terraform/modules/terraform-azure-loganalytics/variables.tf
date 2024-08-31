@@ -1,13 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Variables
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Resource Group and Locations
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
   description = "(Required) Name of the resource group to be used when creating this Azure Log Analytics Workspace."
   type        = string
@@ -18,11 +8,6 @@ variable "location" {
   type        = string
   nullable    = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Log Analytics Workspace
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "log_analytics_workspace_name" {
   description = "(Required) The name for this Azure Log Analytics Workspace."
   type        = string
@@ -48,11 +33,6 @@ variable "log_reservation_capacity_in_gb_per_day" {
   type        = number
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Log Analytics Query Pack
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "create_log_analytics_query_pack" {
   description = "Enable or disable the creation of Log Analytics Query Pack."
   type        = bool
@@ -62,11 +42,6 @@ variable "query_pack_name" {
   description = "(Required) The name which should be used for this Log Analytics Query Pack. Changing this forces a new resource to be created."
   type        = string
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Tagging
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "tags" {
   description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
   type        = map(string)

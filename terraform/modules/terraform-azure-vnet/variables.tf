@@ -1,13 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Variables
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Resource Group and Locations
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
   description = "(Required) Name of the resource group to be used when creating this Azure Virtual Network."
   type        = string
@@ -18,11 +8,6 @@ variable "location" {
   type        = string
   nullable    = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Virtual Network
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "virtualnet_name" {
   description = "(Required) Name of this Azure Virtual Network to create."
   type        = any
@@ -38,19 +23,14 @@ variable "dns_servers" {
   type        = any
   default     = []
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Network Security Group Associations
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "subnet_assoc" {
   description = <<-EOT
   (Optional) A map of subnet IDs to Network Security Group IDs for association. Defaults to `{}`.
 
-  Inputs 
-  
+  Inputs
+
   ```hcl
-  subnet_assoc = { 
+  subnet_assoc = {
     5 = module.lata-brs-d-nsg-appsrv.network_security_group_id,
     6 = module.lata-brs-d-nsg-appsrv.network_security_group_id
   }
@@ -70,21 +50,11 @@ variable "subnet_names" {
   }))
   default = []
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure DDOS Protection Plan
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "ddos_protection_plan_id" {
   description = "(Required) ID of the Azure DDOS protection plan."
   type        = string
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Tagging
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "tags" {
   description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
   type        = map(string)

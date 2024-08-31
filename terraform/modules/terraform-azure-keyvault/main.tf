@@ -1,12 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Main
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Sets Providers and Versions
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 terraform {
   required_version = ">= 1.5"
   required_providers {
@@ -16,25 +7,6 @@ terraform {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Module Logic
-  - Data block to fetch Azure Entra Groups.
-  - Data block to fetch Azure Entra Users.
-  - Data block to fetch Azure Resource Group.
-  - Data block to fetch Azure Client Configuration.
-  - Resource block to create Azure KeyVault.
-    - Dynamic block to create Network ACLs.
-    - Dynamic block to create Access Policy.
-  - Resource block to create Azure KeyVault Secret(s).
-/*
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Fetch Azure Entra Information
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 data "azuread_group" "main" {
   count        = length(local.group_names)
   display_name = local.group_names[count.index]
@@ -49,11 +21,6 @@ data "azurerm_resource_group" "main" {
 data "azurerm_client_config" "main" {
 
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure KeyVault.
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_key_vault" "main" {
   #checkov:skip=CKV_AZURE_109:We cannot implement due backward compatibility
   #checkov:skip=CKV2_AZURE_32:Not applicable within this resource
@@ -106,11 +73,7 @@ resource "azurerm_key_vault" "main" {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure KeyVault Secret(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
+
 resource "azurerm_key_vault_secret" "main" {
   #checkov:skip=CKV_AZURE_114:Content check is severity low
   #checkov:skip=CKV_AZURE_41:We don't use it at the moment in our environment

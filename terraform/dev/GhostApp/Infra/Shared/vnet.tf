@@ -1,7 +1,7 @@
 module "vnet01" {
-  source              = "../../../modules/terraform-azure-vnet"
-  resource_group_name = module.resource-group-01.name
-  virtualnet_name     = "${var.environment-prefix}VNET01"
+  source              = "../../../../modules/terraform-azure-vnet"
+  resource_group_name = module.shared-resource-group.name
+  virtualnet_name     = "${var.environment-prefix}Shared-VNET01"
   address_space       = ["10.15.0.0/16"]
   location            = var.location
 
@@ -71,9 +71,5 @@ module "vnet01" {
       service_endpoints                 = []
       delegation                        = {}
     }
-  ]
-
-  depends_on = [
-    module.resource-group-01
   ]
 }

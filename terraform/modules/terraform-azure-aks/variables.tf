@@ -1,13 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Variables
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Resource Group and Locations
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "resource_group_name" {
   description = "(Required) Name of the resource group to be used when creating this Azure Kubernetes Service."
   type        = string
@@ -18,11 +8,6 @@ variable "location" {
   type        = string
   nullable    = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Kubernetes Service
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "cluster_name" {
   description = "(Required) The name of the cluster. If there is no prefix, this name will be used for the cluster."
   type        = string
@@ -36,28 +21,18 @@ variable "nodes_resource_group_name" {
 variable "kubernetes_version" {
   description = "(Optional) Kubernetes Version - az aks get-versions --location westeurope --output table. Defaults to `1.26.6`."
   type        = string
-  default     = "1.26.6" // Current Stable on 23/08/23
+  default     = "1.26.6"
 }
 variable "sku_tier" {
   description = "(Optional) The SKU Tier that should be used for this Kubernetes Cluster. Possible values are `Free` and `Paid`. Defaults to `Paid`."
   type        = string
   default     = "Paid"
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Kubernetes Service Misc
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "run_command_enabled" {
   description = "(Optional) Whether to enable run command for the cluster or not. Defaults to `Null`."
   type        = bool
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Kubernetes Service Maintenance
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "automatic_channel_upgrade" {
   description = "(Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `patch`, `rapid`, `node-image` and `stable`. Omitting this field sets this value to none. Defaults to `Null`."
   type        = string
@@ -84,11 +59,6 @@ variable "image_cleaner_interval_hours" {
   type        = number
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Private Cluster
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "private_cluster_enabled" {
   description = "(Optional) If true cluster API server will be exposed only on internal IP address and available only in cluster vnet. Defaults to `false`."
   type        = bool
@@ -99,21 +69,11 @@ variable "private_cluster_dns_prefix" {
   type        = string
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Identity
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "identity_type" {
   description = "(Optional) The type of identity used for the managed cluster. Conflict with `client_id` and `client_secret`. Possible values are `SystemAssigned` and `UserAssigned`. If `UserAssigned` is set, a `user_assigned_identity_id` must be set as well. Defaults to `SystemAssigned`."
   type        = string
   default     = "SystemAssigned"
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Roles Based Access Control
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "rbac_enabled" {
   description = "(Optional) Enable Role Based Access Control. Defaults to `true`."
   type        = bool
@@ -129,11 +89,6 @@ variable "rbac_aad_admin_group_object_ids" {
   type        = list(string)
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Application Security
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "oidc_issuer_enabled" {
   description = "(Optional) Enable or Disable the OIDC issuer URL. Defaults to false."
   type        = bool
@@ -144,11 +99,6 @@ variable "workload_identity_enabled" {
   type        = bool
   default     = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  API Authorisation
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "api_authorized_ip_ranges" {
   description = "(Optional) Set of authorized IP ranges to allow access to the API server. Defaults to `Null`."
   type        = list(string)
@@ -164,11 +114,6 @@ variable "api_vnet_integration_enabled" {
   type        = bool
   default     = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Node Pools
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "nodepool_orchestrator_version" {
   description = <<EOT
   "(Optional) Version of Kubernetes used for Default and Additional Node Pools. If not specified, the default node pool will be created with the version specified by `kubernetes_version`. If both are unspecified, the latest recommended version will be used at provisioning time (but won't auto-upgrade).
@@ -329,11 +274,6 @@ variable "cost_analysis_enabled" {
   type        = bool
   default     = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Upgrade Settings for AKS cluster and Node pool
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "node_max_surge" {
   description = "(Required) The maximum number or percentage of nodes which will be added to the Node Pool size during an upgrade."
   type        = string
@@ -349,11 +289,6 @@ variable "node_soak_duration_in_minutes" {
   type        = number
   default     = 0
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Maintenance Window Profile for AKS cluster Upgrade/Update Activities
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "maintenance_window" {
   description = "(Optional) Maintenance configuration of the managed cluster."
   type = object({
@@ -368,11 +303,6 @@ variable "maintenance_window" {
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Maintenance Window Auto Upgrade profile for AKS cluster with auto upgrade enabled
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "maintenance_window_auto_upgrade" {
   description = <<EOT
  - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
@@ -407,11 +337,6 @@ EOT
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Maintenance Window Node OS Profile for AKS nodepool OS Upgrade/Update Activities
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "maintenance_window_node_os" {
   description = <<EOT
  - `day_of_month` - (Optional) The day of the month for the maintenance run. Required in combination with RelativeMonthly frequency. Value between 0 and 31 (inclusive).
@@ -446,11 +371,6 @@ EOT
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Linux Profile
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "linux_profile" {
   description = "(Optional) Username and ssh key for accessing AKS Linux nodes with ssh. Defaults to `Null`."
   type = object({
@@ -459,11 +379,6 @@ variable "linux_profile" {
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Windows Profile
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "windows_profile" {
   description = "(Optional) Admin username and password for Windows hosts. Defaults to `Null`."
   type = object({
@@ -472,11 +387,6 @@ variable "windows_profile" {
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Cluster Networking
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "net_mode" {
   description = <<EOT
   (Optional) Set the network mode to use for networking. Defaults to `Null`.
@@ -648,11 +558,6 @@ variable "net_aznatgw_idle_timeout_in_minutes" {
   type        = number
   default     = 4
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Service Mesh
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "service_mesh_envoy_enabled" {
   description = "(Optional) Set to true to enable Open Service Mesh addon which runs Envoy on the cluster. This is not the same as Istio Service Mesh which uses the service_mesh_istio_profile. Defaults to `Null`."
   type        = bool
@@ -678,11 +583,6 @@ variable "service_mesh_istio_profile" {
     mode = "Istio"
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Application Gateway Ingress
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "ingress_application_gateway_enabled" {
   description = "(Optional) Whether to deploy the Application Gateway ingress controller to this Kubernetes Cluster? Defaults to `false`."
   type        = bool
@@ -708,21 +608,11 @@ variable "ingress_application_gateway_subnet_id" {
   type        = string
   default     = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  DNS Prefix
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "dns_prefix" {
   description = "(Optional) Prefix for hostnames that are created. If not specified, this generate a hostname using the managed cluster and resource group names. Defaults to `Empty`."
   type        = string
   default     = ""
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Cluster Extensions
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "enable_http_application_routing" {
   description = "(Optional) Enable HTTP Application Routing Addon (forces recreation). Defaults to `false`."
   type        = bool
@@ -768,11 +658,6 @@ variable "secret_rotation_interval" {
   type        = string
   default     = "2m"
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Cluster Autoscaling
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "auto_scaler_profile" {
   description = "(Optional) Configuration of `auto_scaler_profile` block object. Defaults to `Null`."
   type = object({
@@ -796,11 +681,6 @@ variable "auto_scaler_profile" {
   })
   default = null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Cluster Storage
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "storage_profile_blob_driver_enabled" {
   description = "(Optional) Is the Blob CSI driver enabled? Defaults to `false`"
   type        = bool
@@ -831,12 +711,6 @@ variable "storage_profile_snapshot_controller_enabled" {
   type        = bool
   default     = true
 }
-
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Tagging
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 variable "tags" {
   description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."
   type        = map(string)

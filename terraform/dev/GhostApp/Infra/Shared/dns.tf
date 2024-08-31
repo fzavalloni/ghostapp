@@ -1,9 +1,9 @@
 
 module "public-dns" {
-  source              = "../../../modules/terraform-azure-public-dns"
+  source              = "../../../../modules/terraform-azure-public-dns"
 
   name                = "fabriziozavalloni.com.br"
-  resource_group_name = module.resource-group-01.name
+  resource_group_name = module.shared-resource-group.name
 
   dns_a_records       = {
     record1 = {
@@ -21,8 +21,4 @@ module "public-dns" {
       ]
     }
   }
-
-  depends_on = [
-    module.resource-group-01
-  ]
 }

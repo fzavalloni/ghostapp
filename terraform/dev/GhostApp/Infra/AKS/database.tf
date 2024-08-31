@@ -1,5 +1,5 @@
 # module "mysql01" {
-#   source                = "../../../modules/terraform-azure-mysql"
+#   source                = "../../../../modules/terraform-azure-mysql"
 
 #   name                  = "mysql-ghost"
 #   location              = var.location

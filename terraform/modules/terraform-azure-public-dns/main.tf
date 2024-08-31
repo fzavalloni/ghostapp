@@ -1,12 +1,3 @@
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Main
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Sets Providers and Versions
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 terraform {
   required_version = ">= 1.5"
   required_providers {
@@ -16,27 +7,6 @@ terraform {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Module Logic
-  - Resource block to create Azure DNS Zone.
-    - Dynamic block to create SOA Record(s).
-  - Resource block to create Azure DNS Zone A Record(s).
-  - Resource block to create Azure DNS Zone AAAA Record(s).
-  - Resource block to create Azure DNS Zone CAA Record(s).
-  - Resource block to create Azure DNS Zone CNAME Record(s).
-  - Resource block to create Azure DNS Zone MX Record(s).
-  - Resource block to create Azure DNS Zone NS Record(s).
-  - Resource block to create Azure DNS Zone PTR Record(s).
-  - Resource block to create Azure DNS Zone SRV Record(s).
-  - Resource block to create Azure DNS Zone TXT Record(s).
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_zone" "main" {
   name                = var.name
   resource_group_name = var.resource_group_name
@@ -57,11 +27,6 @@ resource "azurerm_dns_zone" "main" {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone A Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_a_record" "this" {
   for_each = var.dns_a_records
 
@@ -73,11 +38,6 @@ resource "azurerm_dns_a_record" "this" {
   records            = each.value.records != null && each.value.records != "" ? each.value.records : null
   target_resource_id = each.value.target_resource_id != null && each.value.target_resource_id != "" ? each.value.target_resource_id : null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone AAAA Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_aaaa_record" "this" {
   for_each = var.dns_aaaa_records
 
@@ -89,11 +49,6 @@ resource "azurerm_dns_aaaa_record" "this" {
   records            = each.value.records != null && each.value.records != "" ? each.value.records : null
   target_resource_id = each.value.target_resource_id != null && each.value.target_resource_id != "" ? each.value.target_resource_id : null
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone CAA Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_caa_record" "this" {
   for_each = var.dns_caa_records
 
@@ -112,11 +67,6 @@ resource "azurerm_dns_caa_record" "this" {
     }
   }
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone CNAME Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_cname_record" "this" {
   for_each = var.dns_cname_records
 
@@ -127,11 +77,6 @@ resource "azurerm_dns_cname_record" "this" {
   record              = each.value.record
   tags                = each.value.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone MX Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_mx_record" "this" {
   for_each = { for mx in var.dns_mx_records : mx.name => mx }
 
@@ -150,11 +95,6 @@ resource "azurerm_dns_mx_record" "this" {
 
   tags = each.value.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone NS Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_ns_record" "this" {
   for_each = { for ns in var.dns_ns_records : ns.name => ns }
 
@@ -165,11 +105,6 @@ resource "azurerm_dns_ns_record" "this" {
   records             = each.value.records
   tags                = each.value.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone PTR Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_ptr_record" "this" {
   for_each = { for ptr in var.dns_ptr_records : ptr.name => ptr }
 
@@ -180,11 +115,6 @@ resource "azurerm_dns_ptr_record" "this" {
   records             = each.value.records
   tags                = each.value.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone SRV Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_srv_record" "this" {
   for_each = { for srv in var.dns_srv_records : srv.name => srv }
 
@@ -205,11 +135,6 @@ resource "azurerm_dns_srv_record" "this" {
 
   tags = each.value.tags
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Create Azure DNS Zone TXT Record(s)
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
 resource "azurerm_dns_txt_record" "this" {
   for_each = { for txt in var.dns_txt_records : txt.name => txt }
 
