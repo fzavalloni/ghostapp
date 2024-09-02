@@ -638,6 +638,11 @@ variable "log_analytics_workspace_id" {
   type        = string
   default     = null
 }
+variable "msi_auth_for_monitoring_enabled" {
+  description = "(Optional) Is managed identity authentication for monitoring enabled?"
+  type        = bool
+  default     = false
+}
 variable "microsoft_defender_enabled" {
   description = "(Optional) Is Microsoft Defender on the cluster enabled? Requires `var.log_analytics_workspace_enabled` to be `true` to set this variable to `true`. Defaults to `false`."
   type        = bool
@@ -710,6 +715,20 @@ variable "storage_profile_snapshot_controller_enabled" {
   description = "(Optional) Is the Snapshot Controller enabled? Defaults to `true`"
   type        = bool
   default     = true
+}
+variable "monitor_metrics" {
+  type = object({
+    annotations_allowed = optional(string)
+    labels_allowed      = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+  (Optional) Specifies a Prometheus add-on profile for the Kubernetes Cluster
+  object({
+    annotations_allowed = "(Optional) Specifies a comma-separated list of Kubernetes annotation keys that will be used in the resource's labels metric."
+    labels_allowed      = "(Optional) Specifies a Comma-separated list of additional Kubernetes label keys that will be used in the resource's labels metric."
+  })
+EOT
 }
 variable "tags" {
   description = "(Optional) The Azure Tags to apply to all new resources. Defaults to `Null`."

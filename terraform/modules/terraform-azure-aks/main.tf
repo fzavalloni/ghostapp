@@ -87,6 +87,15 @@ resource "azurerm_kubernetes_cluster" "main" {
     }
   }
 
+  dynamic "monitor_metrics" {
+    for_each = var.monitor_metrics != null ? ["monitor_metrics"] : []
+
+    content {
+      annotations_allowed = var.monitor_metrics.annotations_allowed
+      labels_allowed      = var.monitor_metrics.labels_allowed
+    }
+  }
+
   dynamic "storage_profile" {
     for_each = var.storage_profile_enabled ? ["storage_profile"] : []
 
@@ -203,7 +212,8 @@ resource "azurerm_kubernetes_cluster" "main" {
     for_each = var.enable_log_analytics_workspace ? ["oms_agent"] : []
 
     content {
-      log_analytics_workspace_id = var.log_analytics_workspace_id
+      log_analytics_workspace_id      = var.log_analytics_workspace_id
+      msi_auth_for_monitoring_enabled = var.msi_auth_for_monitoring_enabled
     }
   }
 
