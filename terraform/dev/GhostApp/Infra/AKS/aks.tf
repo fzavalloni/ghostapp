@@ -74,12 +74,16 @@ module "akscluster01-diag" {
 
 //https://faultbucket.ca/2023/06/azure-managed-prometheus-and-grafana-with-terraform-part-2/
 
-resource "azapi_resource" "NodeRecordingRulesRuleGroup" {
-  type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
-  name      = "NodeRecordingRulesRuleGroup-${module.akscluster01.name}"
-  location  = var.location
-  parent_id = module.resource-group-01.id
-  body = jsonencode({
+module "azpi_noderecordingrulesrulegroup_aks01" {
+  source    = "../../../../modules/terraform-azure-azapi-resource"
+
+  name                      = "NodeRecordingRulesRuleGroup-${module.akscluster01.name}"
+  type                      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
+  location                  = var.location
+  parent_id                 = module.resource-group-01.id
+  schema_validation_enabled = false
+  ignore_missing_property   = false   
+  body                      = jsonencode({
     "properties" : {
       "scopes" : [
         module.monitor-workspace01.id
@@ -133,17 +137,18 @@ resource "azapi_resource" "NodeRecordingRulesRuleGroup" {
         }
       ]
     }
-  })
-
-  schema_validation_enabled = false
-  ignore_missing_property   = false
+  })   
 }
 
-resource "azapi_resource" "KubernetesReccordingRulesRuleGroup" {
-  type      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
-  name      = "KubernetesReccordingRulesRuleGroup-${module.akscluster01.name}"
-  location  = var.location
-  parent_id = module.resource-group-01.id
+module "azpi_kubernetesreccordingrulesrulegroup_aks01" {
+  source    = "../../../../modules/terraform-azure-azapi-resource"
+
+  name                      = "KubernetesReccordingRulesRuleGroup-${module.akscluster01.name}"
+  type                      = "Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01"
+  location                  = var.location
+  parent_id                 = module.resource-group-01.id
+  schema_validation_enabled = false
+  ignore_missing_property   = false
   body = jsonencode({
     "properties" : {
       "scopes" : [
@@ -243,7 +248,4 @@ resource "azapi_resource" "KubernetesReccordingRulesRuleGroup" {
       ]
     }
   })
-
-  schema_validation_enabled = false
-  ignore_missing_property   = false
 }
