@@ -72,29 +72,30 @@ module "akscluster01-diag" {
   log_analytics_destination_type = "Dedicated"
 }
 
-# module "akscluster01-backup" {
-#   source                           = "../../../../modules/terraform-azure-aks-backup"
-#   aks_cluster_name                 = var.aks_instance_00.cluster_name
-#   aks_cluster_id                   = module.emea-gwc-p00-akscluster00.aks_id
-#   aks_system_assigned_identity     = module.emea-gwc-p00-akscluster00.system_assigned_identity
-#   aks_cluster_resource_group_id    = module.emea-gwc-p00-aks.id
-#   location                         = var.location
-#   backup_storage_name              = var.backup_vault_01.storage_name
-#   backup_storage_id                = module.emea-gwc-p00-stdlrs.storage_account_id
-#   backup_storage_resource_group    = var.backup_vault_01.storage_resource_group
-#   backup_storage_resource_group_id = module.emea-gwc-p00-shared.id
-#   backup_storage_container         = var.backup_vault_01.storage_container
-#   backup_vault_name                = var.backup_vault_01.name
-#   backup_vault_resource_group      = var.backup_vault_01.resource_group_name
-#   backup_vault_id                  = module.emea-gwc-p00-backup-vault01.backup_vault_id
-#   backup_vault_identity            = module.emea-gwc-p00-backup-vault01.identity
-#   subscription_id                  = var.subs_id
-#   tenant_id                        = var.tenant_id
+module "akscluster01-backup" {
+  source                           = "../../../../modules/terraform-azure-aks-backup"
+  aks_cluster_name                 = module.akscluster01.name
+  aks_cluster_id                   = module.akscluster01.aks_id
+  aks_system_assigned_identity     = module.akscluster01.system_assigned_identity
+  aks_cluster_resource_group_id    = module.resource-group-01.id
+  location                         = var.location
+  backup_storage_name              = data.terraform_remote_state.shared.outputs.shared_storage01_name
+  backup_storage_id                = data.terraform_remote_state.shared.outputs.shared_storage01_id
+  backup_storage_resource_group    = data.terraform_remote_state.shared.outputs.shared_resource_group_name
+  backup_storage_resource_group_id = data.terraform_remote_state.shared.outputs.shared_resource_group_id
+  backup_storage_container         = "akscluster"
+  backup_vault_name                = module.backup-vault01.backup_vault_name
+  backup_vault_resource_group      = module.backup-vault01.backup_vault_resource_group_name
 
-#   depends_on = [
-#     module.emea-gwc-p00-akscluster00
-#   ]
-# }
+  backup_vault_id                  = module.backup-vault01.backup_vault_id
+  backup_vault_identity            = module.backup-vault01.identity
+  subscription_id                  = var.subs_id
+  tenant_id                        = var.tenant_id
+
+  depends_on = [
+    module.akscluster01
+  ]
+}
 
 //https://faultbucket.ca/2023/06/azure-managed-prometheus-and-grafana-with-terraform-part-2/
 

@@ -5,9 +5,15 @@
 #------------------------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------------------------
 /*
-  Kubernetes Cluster Backup Extention
+  Resource Group and Locations
 */
 #------------------------------------------------------------------------------------------------------------------------------------------
+variable "aks_cluster_name" {
+  description = "(Required) Specifies the Azure Kubernetes Cluster name on which to enable backup."
+  type        = string
+  nullable    = false
+}
+
 variable "aks_cluster_id" {
   description = "(Required) Specifies the Azure Kubernetes Cluster ID on which to enable backup."
   type        = string
@@ -18,28 +24,17 @@ variable "aks_cluster_resource_group_id" {
   type        = string
   nullable    = false
 }
+
 variable "aks_system_assigned_identity" {
   description = "(Required) AKS System Managed Identity."
   type        = string
   nullable    = false
 }
+
 variable "location" {
   description = "(Required) Location to be used when creating this Azure Kubernetes Cluster Backup."
   type        = string
   nullable    = false
-}
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Subscription and Tenant IDs
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-variable "subscription_id" {
-  description = "(Required) Azure Subscription Id."
-  type        = string
-}
-variable "tenant_id" {
-  description = "(Required) Azure AD Tenant Id."
-  type        = string
 }
 #------------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -55,6 +50,7 @@ variable "backup_storage_name" {
   type        = string
   nullable    = false
 }
+
 variable "backup_storage_id" {
   description = "(Required) Backup Storage Id"
   type        = string
@@ -75,11 +71,18 @@ variable "backup_storage_container" {
   type        = string
   nullable    = false
 }
+variable "backup_vault_name" {
+  description = "(Required) The Azure Backup Vault that controls the AKS Backup"
+  type        = string
+  nullable    = false
+}
+
 variable "backup_vault_id" {
   description = "(Required) The Azure Backup Vault Id that controls the AKS Backup"
   type        = string
   nullable    = false
 }
+
 variable "backup_vault_identity" {
   description = "(Required) The Azure Backup Vault managed Identity that controls the AKS Backup"
   type        = string
@@ -90,132 +93,42 @@ variable "backup_vault_resource_group" {
   type        = string
   nullable    = false
 }
+variable "backup_vault_aks_policy_name" {
+  description = "(Optional) AKS Policy Name created within the Azure Backup Vault. Defaults to `AKSDefaultBackupPolicy`."
+  type        = string
+  default     = "AKSDefaultBackupPolicy"
+}
+variable "backup_vault_aks_policy_repeating_interval" {
+  description = "(Optional) Specifies the backup interval for this Azure Kubernetes Backup. Valid inputs are `Daily` and Weekly`. Defaults to `Daily`."
+  type        = string
+  default     = "Daily"
+  validation {
+    condition     = contains(["Daily", "Weekly"], var.backup_vault_aks_policy_repeating_interval)
+    error_message = "Invalid input, options: \"Daily\"and \"Weekly\" ."
+  }
+}
+variable "backup_vault_aks_policy_repeating_interval_count" {
+  description = "(Optional) Specifies this Azure Kubernetes Backup policy interval count. Defaults to `1`."
+  type        = number
+  default     = 1
+}
+variable "backup_vault_aks_policy_retention_weeks" {
+  description = "(Optional) Specifies the amount of weeks the backup is preserved before the rotation. Defaults to `4`."
+  type        = number
+  default     = 4
+}
 variable "enable_kubernetes_configuration_provider" {
   description = "(Optional) Set to `true` to enable the Microsoft.KubernetesConfiguration resource at the Subscription level. Defaults to `false`."
   type        = bool
   default     = false
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Data Protection Backup Instance Kubernetes Cluster
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-variable "backup_instance_name" {
-  description = "(Required) The name which should be used for this Backup Instance Kubernetes Cluster."
-  type        = string
-}
-variable "backup_vault_aks_policy_id" {
-  description = "(Optional) The ID of the Backup Policy."
-  type        = string
-  default     = null
-}
-variable "backup_datasource_parameters" {
-  description = <<EOT
-  (Optional) Backup datasource parameters.
 
-  #Example Input
-  ```hcl
-  backup_datasource_parameters = {
-    excluded_namespaces              = ["kube-system", "default"]
-    excluded_resource_types          = ["configmaps", "secrets"]
-    cluster_scoped_resources_enabled = true
-    included_namespaces              = ["namespace1", "namespace2"]
-    included_resource_types          = ["deployments", "pods"]
-    label_selectors                  = ["app=nginx", "tier=frontend"]
-    volume_snapshot_enabled          = true
-  }
-  ```
-  EOT
-  type = object({
-    excluded_namespaces              = optional(list(string))
-    excluded_resource_types          = optional(list(string))
-    cluster_scoped_resources_enabled = optional(bool)
-    included_namespaces              = optional(list(string))
-    included_resource_types          = optional(list(string))
-    label_selectors                  = optional(list(string))
-    volume_snapshot_enabled          = optional(bool)
-  })
-  default = null
+variable "subscription_id" {
+  description = "(Required) Azure Subscription Id."
+  type        = string  
 }
-#------------------------------------------------------------------------------------------------------------------------------------------
-/*
-  Azure Data Protection Backup Policy Kubernetes Cluster
-*/
-#------------------------------------------------------------------------------------------------------------------------------------------
-variable "create_backup_policy" {
-  description = "(Required) Boolean flag to indicate whether to create the backup policy."
-  type        = bool
-  default     = false
-}
-variable "backup_policy_configuration" {
-  description = <<EOT
-  (Optional) Configuration for the backup policy.
 
-  #Example Input
-  ```hcl
-  backup_policy_configuration = {
-    name                              = "example-backup-policy"
-    backup_policy_resource_group_name = "example-resource-group"
-    backup_vault_name                 = "example-backup-vault"
-    backup_repeating_time_intervals   = ["daily", "weekly"]
-    time_zone                         = "UTC"
-    retention_rules = [
-      {
-        name     = "weekly-retention"
-        priority = 1
-        life_cycle = {
-          duration        = "P4M"
-          data_store_type = "OperationalStore"
-        }
-        criteria = {
-          absolute_criteria      = "weekly"
-          days_of_week           = ["Monday"]
-          months_of_year         = ["*"]
-          scheduled_backup_times = ["03:00"]
-          weeks_of_month         = []
-        }
-      },
-      {
-        name     = "monthly-retention"
-        priority = 2
-        life_cycle = {
-          duration        = "P1Y"
-          data_store_type = "ArchivalStore"
-        }
-        criteria = {
-          absolute_criteria      = "monthly"
-          days_of_week           = []
-          months_of_year         = ["January"]
-          scheduled_backup_times = ["04:00"]
-          weeks_of_month         = []
-        }
-      }
-    ]
-  }
-  ```
-  EOT  
-  type = object({
-    name                              = string
-    backup_policy_resource_group_name = string
-    backup_vault_name                 = string
-    backup_repeating_time_intervals   = list(string)
-    time_zone                         = optional(string)
-    default_retention_duration        = optional(string, "P4M")
-    retention_rules = optional(list(object({
-      name     = string
-      priority = number
-      life_cycle = object({
-        duration        = string
-        data_store_type = string
-      })
-      criteria = object({
-        absolute_criteria      = optional(string)
-        days_of_week           = optional(list(string))
-        months_of_year         = optional(list(string))
-        scheduled_backup_times = optional(list(string))
-        weeks_of_month         = optional(list(string))
-      })
-    })))
-  })
-  default = null
+variable "tenant_id" {
+  description = "(Required) Azure AD Tenant Id."
+  type        = string  
 }
