@@ -46,7 +46,16 @@ module "vnet01" {
       address_prefixes                  = ["10.15.2.0/24"]
       private_endpoint_network_policies = "Enabled"
       service_endpoints                 = []
-      delegation                        = {}
+      delegation                        = {
+                                            appgt = [
+                                              {
+                                                name    = "Microsoft.ServiceNetworking/trafficControllers"
+                                                actions = [
+                                                  "Microsoft.Network/virtualNetworks/subnets/join/action"
+                                                ]
+                                              }
+                                            ]
+                                          }
     },
     {
       name                              = "${var.environment-prefix}SUBNET-10.115.3.0_24"
@@ -69,7 +78,16 @@ module "vnet01" {
       address_prefixes                  = ["10.15.16.0/20"]
       private_endpoint_network_policies = "Enabled"
       service_endpoints                 = []
-      delegation                        = {}
+      delegation                        = {
+                                            appgt = [
+                                              {
+                                                name    = "Microsoft.ServiceNetworking/trafficControllers"
+                                                actions = [
+                                                  "Microsoft.Network/virtualNetworks/subnets/join/action"
+                                                ]
+                                              }
+                                            ]
+                                          }
     }
   ]
 }

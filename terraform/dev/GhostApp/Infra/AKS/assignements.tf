@@ -25,6 +25,24 @@ module "azure_ad_assignments"{
       role_definition_name             = "Grafana Admin"
       scope                            = module.grafana01.instance_id
       skip_service_principal_aad_check = false
-    }
+    },
+    AppGatewayForContainersManager = {
+      principal_id                     = module.akscluster01-alb-identity.uai_principal_id
+      role_definition_name             = "AppGw for Containers Configuration Manager"
+      scope                            = module.resource-group-01.id
+      skip_service_principal_aad_check = true
+    },
+    AppGatewayForContainerNetwork = {
+      principal_id                     = module.akscluster01-alb-identity.uai_principal_id
+      role_definition_name             = "Network Contributor"
+      scope                            = data.terraform_remote_state.shared.outputs.shared_vnet01
+      skip_service_principal_aad_check = true
+    },
+    AppGatewayIdentity = {
+      principal_id                     = module.akscluster01-alb-identity.uai_principal_id
+      role_definition_name             = "Reader"
+      scope                            = data.azurerm_subscription.current.id
+      skip_service_principal_aad_check = true
+    },    
    }
 }

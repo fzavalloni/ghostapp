@@ -20,23 +20,25 @@ module "akscluster01" {
   sku_tier                              = "Free"
   private_cluster_enabled               = false
   enable_azure_policy                   = true
-  ingress_application_gateway_enabled   = true
+  ingress_application_gateway_enabled   = false
   microsoft_defender_enabled            = true
   key_vault_secrets_provider_enabled    = true
   msi_auth_for_monitoring_enabled       = true
-  ingress_application_gateway_name      = "${var.environment-prefix}AppGateway"
-  ingress_application_gateway_subnet_id = data.terraform_remote_state.shared.outputs.shared_subnets_vnet01[5]
+  oidc_issuer_enabled                   = true
+  workload_identity_enabled             = true
+  #ingress_application_gateway_name      = "${var.environment-prefix}AppGateway"
+  #ingress_application_gateway_subnet_id = data.terraform_remote_state.shared.outputs.shared_subnets_vnet01[5]
 
-  default_nodepool_vm_size              = "Standard_B2ms"
+  default_nodepool_vm_size              = "Standard_B4ms"
   net_policy                            = "azure"
   net_data_plane                        = "azure"
 
   aks_additional_node_pools = {
-    hppool01 = {
+    apppool01 = {
       node_count                     = 1
-      mode                           = "User"
+      mode                           = "System" #"User" Set it to system in order to no pay for the running node due Basic tier
       name                           = "apppool01"
-      vm_size                        = "Standard_B2ms"
+      vm_size                        = "Standard_B4ms"
       zones                          = ["1"]
       taints                         = null
       labels = {
@@ -59,6 +61,17 @@ module "akscluster01" {
   ]
 }
 
+module "akscluster01-alb-identity" {
+  source = "../../../../modules/terraform-azure-identity"
+  uai_name                    = "${var.environment-prefix}ALB-UserIdentity"
+  resource_group_name         = module.resource-group-01.name
+  location                    = var.location  
+  enable_identity_credential  = true
+  federated_identity_audience = ["api://AzureADTokenExchange"]
+  federated_identity_issuer   = module.akscluster01.oidc_issuer_url
+  federated_identity_subject  = "system:serviceaccount:azure-alb-system:alb-controller-sa"
+}
+
 module "akscluster01-diag" {
   source      = "../../../../modules/terraform-azure-diagnostic-settings"
 
@@ -70,6 +83,153 @@ module "akscluster01-diag" {
   logs_destinations_ids = [
     module.log01.log_analytics_workspace_id
   ]
+}
+
+module "akscluster01-apps" {
+  source         = "../../../../modules/terraform-azure-aks-helm"
+  kubeconfig     = data.azurerm_kubernetes_cluster.akscluster01.kube_config_raw
+
+  release = {
+    alb-controller = {
+      repository_name     = "application-lb"
+      namespace           = "azure-alb-system"
+      chart               = "alb-controller"
+      repository          = "oci://mcr.microsoft.com/application-lb/charts"
+      repository_username = null
+      repository_password = null
+      version             = "1.0.7"
+      verify              = false
+      reuse_values        = false
+      reset_values        = false
+      force_update        = true
+      timeout             = 3600
+      recreate_pods       = false
+      max_history         = 200
+      wait                = true
+      create_namespace    = true
+      values              = null
+      set                 = [
+        {
+          name  = "albController.podIdentity.clientID"
+          value = module.akscluster01-alb-identity.uai_client_id
+        }     
+      ]      
+    },
+
+    alb-resource = {
+      repository_name     = "raw"
+      namespace           = null
+      chart               = "raw"
+      repository          = "https://dysnix.github.io/charts"
+      repository_username = null
+      repository_password = null
+      version             = "v0.3.1"
+      verify              = false
+      reuse_values        = false
+      reset_values        = false
+      force_update        = true
+      timeout             = 3600
+      recreate_pods       = false
+      max_history         = 200
+      wait                = true
+      create_namespace    = true
+      set                 = null
+      values = [
+        <<-EOF
+        resources:
+          - apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: ns-gateway
+          - apiVersion: gateway.networking.k8s.io/v1beta1
+            kind: Gateway
+            metadata:
+              name: gateway-app
+              namespace: ns-gateway
+              annotations:
+                alb.networking.azure.io/alb-id: ${module.akscluster01-app-gateway-containers.id}
+            spec:
+              gatewayClassName: azure-alb-external
+              listeners:
+              - name: http-listener
+                port: 80
+                protocol: HTTP
+                allowedRoutes:
+                  namespaces:
+                    from: All # Same
+              addresses:
+              - type: alb.networking.azure.io/alb-frontend
+                value: ${module.akscluster01-app-gateway-containers.frontend_name}
+        EOF
+      ]
+    }
+    nginx-demo = {
+      repository_name     = "demo-application"
+      namespace           = "demo-app"
+      chart               = "frontend"
+      repository          = "https://mohdazhar96.github.io/Frontend-app-Helmchart/frontend/chart"
+      repository_username = null
+      repository_password = null
+      version             = "0.1.0"
+      verify              = false
+      reuse_values        = false
+      reset_values        = false
+      force_update        = true
+      timeout             = 3600
+      recreate_pods       = false
+      max_history         = 200
+      wait                = false
+      create_namespace    = true
+      set = [
+        {
+          name  = "service.port"
+          value = "80"
+        },
+        {
+          name = "service.type"
+          value = "ClusterIP"
+        }
+      ]
+    },
+    demoapp-route = {
+      repository_name     = "raw"
+      namespace           = "demo-app"
+      chart               = "raw"
+      repository          = "https://dysnix.github.io/charts"
+      repository_username = null
+      repository_password = null
+      version             = "v0.3.1"
+      verify              = false
+      reuse_values        = false
+      reset_values        = false
+      force_update        = true
+      timeout             = 3600
+      recreate_pods       = false
+      max_history         = 200
+      wait                = true
+      create_namespace    = false
+      set                 = null
+      values = [
+        <<-EOF
+        resources:
+          - apiVersion: gateway.networking.k8s.io/v1beta1
+            kind: HTTPRoute
+            metadata:
+              name: httproute-app
+              namespace: demo-app
+            spec:
+              parentRefs:
+              - kind: Gateway
+                name: gateway-app
+                namespace: ns-gateway
+              rules:
+              - backendRefs:
+                - name: nginx-demo-frontend
+                  port: 80
+        EOF 
+      ]
+    }
+  }
 }
 
 # module "akscluster01-backup" {
