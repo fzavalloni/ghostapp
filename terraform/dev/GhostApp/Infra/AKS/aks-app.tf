@@ -27,8 +27,8 @@ module "akscluster01-apps" {
         {
           name  = "albController.podIdentity.clientID"
           value = module.akscluster01-alb-identity.uai_client_id
-        }     
-      ]      
+        }
+      ]
     },
 
     alb-resource = {
@@ -144,7 +144,7 @@ module "akscluster01-apps" {
               - backendRefs:
                 - name: nginx-demo-frontend
                   port: 80
-        EOF 
+        EOF
       ]
     }
   }

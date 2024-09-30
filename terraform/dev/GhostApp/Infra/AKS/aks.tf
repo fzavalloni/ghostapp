@@ -60,4 +60,3 @@ module "akscluster01" {
     module.log01
   ]
 }
-

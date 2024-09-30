@@ -43,6 +43,6 @@ module "azure_ad_assignments"{
       role_definition_name             = "Reader"
       scope                            = data.azurerm_subscription.current.id
       skip_service_principal_aad_check = true
-    },    
+    } 
    }
 }

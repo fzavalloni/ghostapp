@@ -8,7 +8,7 @@ module "azpi_noderecordingrulesrulegroup_aks01" {
   location                  = var.location
   parent_id                 = module.resource-group-01.id
   schema_validation_enabled = false
-  ignore_missing_property   = false   
+  ignore_missing_property   = false
   body                      = jsonencode({
     "properties" : {
       "scopes" : [
@@ -63,7 +63,7 @@ module "azpi_noderecordingrulesrulegroup_aks01" {
         }
       ]
     }
-  })   
+  })
 }
 
 module "azpi_kubernetesreccordingrulesrulegroup_aks01" {

@@ -8,5 +8,4 @@ module "monitor-workspace01" {
   clusters = {
     aks01 = module.akscluster01.aks_id
   }
-
 }
