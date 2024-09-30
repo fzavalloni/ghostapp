@@ -16,6 +16,11 @@ locals {
     try(data.azurerm_monitor_diagnostic_categories.main[0].metrics, [])
   )
 
+  # group_categories = (
+  #   var.group_categories != null ?
+  #   var.group_categories : []
+  # )
+
   metrics = {
     for metric in try(data.azurerm_monitor_diagnostic_categories.main[0].metrics, []) : metric => {
       enabled = contains(local.metric_categories, metric)
