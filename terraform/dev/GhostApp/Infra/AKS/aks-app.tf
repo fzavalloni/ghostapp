@@ -3,6 +3,8 @@ module "akscluster01-apps" {
   kubeconfig     = data.azurerm_kubernetes_cluster.akscluster01.kube_config_raw
 
   release = {
+
+    # Application Gateway for Containers Resources
     alb-controller = {
       repository_name     = "application-lb"
       namespace           = "azure-alb-system"
@@ -76,6 +78,8 @@ module "akscluster01-apps" {
         EOF
       ]
     }
+
+    # Application Deployment
     nginx-demo = {
       repository_name     = "demo-application"
       namespace           = "demo-app"
