@@ -5,7 +5,7 @@ data "azuread_groups" "akscluster01-admins" {
 
 module "akscluster01" {
   #checkov:skip=CKV_AZURE_170:Ensure that AKS use the Paid Sku for its SLA. Not applicable
-  source                                = "../../../../modules/terraform-azure-aks"
+  source                                = "git::https://fzavalloni10@dev.azure.com/fzavalloni10/CCOE/_git/terraform-azure-aks?ref=v1.0.0"
 
   resource_group_name                   = module.resource-group-01.name
   nodes_resource_group_name             = "${var.environment-prefix}AKSCluster01-Resources"
